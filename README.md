@@ -27,19 +27,3 @@ Database: MongoDB with Mongoose
 Authentication: JWT & bcrypt
 
 Version Control: Git + GitHub
-
-📂 Project Structure
-backend/
-│-- src/
-│   │-- config/        # Database & environment configs
-│   │-- controllers/   # Business logic
-│   │-- models/        # Mongoose models
-│   │-- routes/        # API routes
-│   │-- middlewares/   # Auth & validation
-│   │-- utils/         # Helper functions
-│   │-- server.js      # App entry point
-│
-│-- .env.example       # Sample env variables
-│-- .gitignore
-│-- package.json
-│-- README.md
