@@ -3,6 +3,7 @@ const Application = require('../model/applicationModal');
 const sendEmail = require("../utils/sendEmail");
 const path = require('path');
 const fs = require('fs');
+const { createApplicationNotification } = require('./notificationController');
 
 
 // POST /api/application/:id - Create new application
@@ -122,6 +123,7 @@ const postApplication = async (req, res) => {
         // Send confirmation email in background
         setImmediate(async () => {
             try {
+                await createApplicationNotification(application, position)
                 const subject = `Application Received - ${position.title}`;
                 const html = `
                     <div style="font-family: Arial, sans-serif; padding:20px;">

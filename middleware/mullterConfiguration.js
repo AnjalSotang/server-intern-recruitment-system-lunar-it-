@@ -19,7 +19,7 @@ const fileFilter = (req, file, cb) => {
     const allowedResumeTypes = /\.(pdf|doc|docx)$/i;
     const allowedImageTypes = /\.(jpg|jpeg|png|gif|webp)$/i;
     
-    console.log(req.user.role)
+    // console.log(req.user.role)
 
     if (req.user?.role === 'admin') {
         // Admin uploading images
@@ -42,16 +42,16 @@ const fileFilter = (req, file, cb) => {
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         // Check if user is authenticated
-        if (!req.user) {
-            return cb(new Error('User authentication required'), null);
-        }
+        // if (!req.user) {
+        //     return cb(new Error('User authentication required'), null);
+        // }
 
         let uploadPath = resumeDir; // default for regular users
 
-        // Admin uploads go to images directory
-        if (req.user.role === 'admin') {
-            uploadPath = imageDir;
-        }
+          // Only check if req.user exists (admin routes)
+    if (req.user && req.user.role === "admin") {
+      uploadPath = imageDir;
+    }
 
         cb(null, uploadPath);
     },

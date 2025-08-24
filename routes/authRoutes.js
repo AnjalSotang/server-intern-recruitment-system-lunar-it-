@@ -32,39 +32,39 @@ router.post('/reset-password/:token', resetPassword);
 // Protected routes - require authentication
 router.put(
     "/admin/change-password",
-    checkTokenAndRole('admin'),
+    checkTokenAndRole(['admin']),
     changePassword
 );
 
 // NEW: 2FA Management Routes (protected - require authentication)
 router.get(
     "/2fa/status",
-    checkTokenAndRole('admin'), // or checkTokenAndRole(['admin', 'user']) if you have multiple roles
+    checkTokenAndRole(['admin']), // or checkTokenAndRole(['admin', 'user']) if you have multiple roles
     get2FAStatus
 );
 
 router.post(
     "/2fa/enable",
-    checkTokenAndRole('admin'),
+    checkTokenAndRole(['admin']),
     enable2FA
 );
 
 router.post(
     "/2fa/verify-setup",
-    checkTokenAndRole('admin'),
+    checkTokenAndRole(['admin']),
     verify2FASetup
 );
 
 router.post(
     "/2fa/disable",
-    checkTokenAndRole('admin'),
+    checkTokenAndRole(['admin']),
     disable2FA
 );
 
 // User management routes
 router.put(
     "/admin/:id",
-    checkTokenAndRole('admin'),
+    checkTokenAndRole(['admin']),
     upload.single('image'),
     updateUser
 );
@@ -76,7 +76,7 @@ router.delete(
 
 router.get(
     "/admin", 
-    checkTokenAndRole('admin'),
+    checkTokenAndRole(['admin']),
     viewUser
 );
 

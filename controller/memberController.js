@@ -1,4 +1,49 @@
 const Member = require('../model/memberModal');
+const { createMemberNotification, createMemberUpdateNotification } = require('./notificationController');
+
+const getMemberChanges = (existing, updated) => {
+    const changes = [];
+    
+    // Check role changes (most important)
+    if (existing.role !== updated.role) {
+        changes.push({
+            type: 'role',
+            oldValue: existing.role,
+            newValue: updated.role
+        });
+    }
+    
+    // Check department changes
+    if (existing.department !== updated.department) {
+        changes.push({
+            type: 'department',
+            oldValue: existing.department,
+            newValue: updated.department
+        });
+    }
+    
+    // Check name changes
+    if (existing.name !== updated.name) {
+        changes.push({
+            type: 'name',
+            oldValue: existing.name,
+            newValue: updated.name
+        });
+    }
+    
+    // Check email changes
+    if (existing.email !== updated.email) {
+        changes.push({
+            type: 'email',
+            oldValue: existing.email,
+            newValue: updated.email
+        });
+    }
+    
+    return changes;
+};
+
+
 
 const addMember = async (req, res) => {
     try {
@@ -27,9 +72,17 @@ const addMember = async (req, res) => {
         res.status(201).json({
             data: savedMember,
             message: `New Member ${name} added successfully`
-        }
+        })
 
-        );
+  // Create notification in background
+        setImmediate(async () => {
+            try {
+                await createMemberNotification(savedMember);
+            } catch (notificationError) {
+                console.error(`❌ Failed to create notification for member ${savedMember.name}:`, notificationError);
+            }
+        })
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -80,23 +133,76 @@ const getAdmin = async (req, res) => {
 // @route   PUT /api/members/:id
 const updateMember = async (req, res) => {
     try {
+        const memberId = req.params.id;
+        
+        // First, get the existing member data to compare changes
+        const existingMember = await Member.findById(memberId);
+        if (!existingMember) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        // Prevent role update to 'admin' if it's in the request
+        if (req.body.role && req.body.role.toLowerCase() === 'admin') {
+            return res.status(400).json({ message: "Role cannot be updated to admin" });
+        }
+
+        // Update the member
         const updatedMember = await Member.findByIdAndUpdate(
-            req.params.id,
+            memberId,
             req.body,
             { new: true, runValidators: true }
         );
 
-        if (!updatedMember) {
-            return res.status(404).json({ message: 'Member not found' });
-        }
+        // Detect what changed
+        const changes = getMemberChanges(existingMember, updatedMember);
 
+        // Respond to client immediately
         res.status(200).json({
             data: updatedMember,
-            message: "Member Detail is sucessfully updated!!"
-        }
+            message: "Member details successfully updated!"
+        });
+
+        // Create notification in background (only if there were significant changes)
+        const significantChanges = changes.filter(change => 
+            ['role', 'department', 'name'].includes(change.type)
         );
+
+        if (significantChanges.length > 0) {
+            setImmediate(async () => {
+                try {
+                    await createMemberUpdateNotification(existingMember, updatedMember, changes);
+                } catch (notificationError) {
+                    console.error(`❌ Failed to create notification for member ${updatedMember.name}:`, notificationError);
+                }
+            });
+        }
+
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Member update error:', error);
+
+        // Handle duplicate email error
+        if (error.code === 11000) {
+            return res.status(400).json({
+                message: 'A member with this email already exists'
+            });
+        }
+
+        // Handle validation errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => ({
+                field: err.path,
+                message: err.message
+            }));
+            return res.status(400).json({
+                message: 'Validation failed',
+                details: validationErrors
+            });
+        }
+
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+        });
     }
 };
 

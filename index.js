@@ -29,9 +29,10 @@ const applicatonRoutes = require("./routes/applicationRoutes")
 const authRoutes = require("./routes/authRoutes")
 const memberRoutes = require("./routes/memberRoutes")
 const interviewRoutes = require("./routes/interviewRoutes")
+const notificationRoutes = require("./routes/notificationRoutes") 
 const User = require("./model/userModal")
 
-app.use("/api", positionRoutes, applicatonRoutes, memberRoutes, interviewRoutes)
+app.use("/api", positionRoutes, applicatonRoutes, memberRoutes, interviewRoutes, notificationRoutes)
 app.use("/auth", authRoutes)
 app.use('/api/images', express.static(path.join(__dirname, 'storage/images')));
 // Serve resumes from the storage/resumes directory  

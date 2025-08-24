@@ -2,6 +2,50 @@ const Interview = require("../model/interviewModal");
 const Member = require("../model/memberModal");
 const Applicantion = require("../model/applicationModal"); // <-- Make sure you have this model
 const sendEmail = require("../utils/sendEmail"); // <-- Assuming you have a utility for sending emails
+const { createInterviewUpdateNotification, createInterviewCancelNotification } = require("./notificationController");
+
+
+// Helper function to determine what changed in the interview
+const getInterviewChanges = (existing, updated) => {
+    const changes = [];
+
+    // Check date changes
+    if (existing.date.toDateString() !== updated.date.toDateString()) {
+        changes.push(`date changed to ${updated.date.toLocaleDateString()}`);
+    }
+
+    // Check time changes
+    if (existing.time !== updated.time) {
+        changes.push(`time changed to ${updated.time}`);
+    }
+
+    // Check status changes
+    if (existing.status !== updated.status) {
+        changes.push(`status updated to ${updated.status}`);
+    }
+
+    // Check interviewer changes
+    if (existing.interviewerId._id.toString() !== updated.interviewerId.toString()) {
+        changes.push('interviewer reassigned');
+    }
+
+    // Check type changes
+    if (existing.type !== updated.type) {
+        changes.push(`type changed to ${updated.type}`);
+    }
+
+    // Check location/meeting link changes
+    if (existing.location !== updated.location && updated.location) {
+        changes.push('location updated');
+    }
+
+    if (existing.meetingLink !== updated.meetingLink && updated.meetingLink) {
+        changes.push('meeting link updated');
+    }
+
+    return changes;
+};
+
 
 const scheduleInterview = async (req, res) => {
     try {
@@ -193,7 +237,7 @@ const updateInterview = async (req, res) => {
             const [firstName, ...lastNameParts] = candidateName.split(' ');
             const lastName = lastNameParts.join(' ');
 
-            const newApplicant = await Applicantion.findOne({
+            const newApplicant = await Application.findOne({ // Fixed typo
                 firstName: firstName,
                 lastName: lastName
             });
@@ -216,7 +260,10 @@ const updateInterview = async (req, res) => {
             notes: notes || existingInterview.notes || ''
         };
 
-        // 5. Update the interview and populate related fields
+        // 5. Detect changes before updating
+        const changes = getInterviewChanges(existingInterview, updateData);
+
+        // 6. Update the interview and populate related fields
         const updatedInterview = await Interview.findByIdAndUpdate(
             id,
             updateData,
@@ -224,6 +271,114 @@ const updateInterview = async (req, res) => {
         )
             .populate('applicantId', 'firstName lastName positionTitle email')
             .populate('interviewerId', 'name email');
+
+
+        // Notify if required
+        if (updatedInterview.status === "cancelled") {
+            if (!existingInterview.applicantId?.email || !existingInterview.interviewerId?.email) {
+                return res.status(400).json({ message: "Missing email for applicant or interviewer" });
+            }
+
+            const formattedDate = existingInterview.date.toLocaleDateString();
+            const formattedTime = existingInterview.time;
+
+            setImmediate(async () => {
+                try {
+                    // Applicant Email
+                    await sendEmail(
+                        existingInterview.applicantId.email,
+                        "Interview Cancelled",
+                        `<p>Dear ${existingInterview.applicantId.firstName},</p>
+                 <p>We regret to inform you that your interview scheduled for ${formattedDate} at ${formattedTime} has been cancelled.</p>
+                 <p>Reason: ${notes}</p>
+                 <p>We apologize for any inconvenience this may cause. Please feel free to contact us if you have any questions or would like to reschedule.</p>
+                 <p>Best regards,<br/>Recruitment Team</p>`
+                    );
+
+                    // Interviewer Email
+                    await sendEmail(
+                        existingInterview.interviewerId.email,
+                        "Interview Cancelled",
+                        `<p>Dear ${existingInterview.interviewerId.name},</p>
+                 <p>This is to notify you that the interview with ${existingInterview.applicantId.firstName} ${existingInterview.applicantId.lastName}, scheduled for ${formattedDate} at ${formattedTime}, has been cancelled.</p>
+                 <p>Reason: ${notes}</p>
+                 <p>Thank you for your understanding and cooperation.</p>
+                 <p>Best regards,<br/>Recruitment Team</p>`
+                    );
+                } catch (emailError) {
+                    console.error("Failed to send cancellation emails:", emailError);
+                }
+            });
+        }
+
+
+        if (updatedInterview.status === "scheduled") {
+            if (!existingInterview.applicantId?.email || !existingInterview.interviewerId?.email) {
+                return res.status(400).json({ message: "Missing email for applicant or interviewer" });
+            }
+
+            const formattedDate = existingInterview.date.toLocaleDateString();
+            const formattedTime = existingInterview.time;
+
+            const newFormattedDate = updatedInterview.date.toLocaleDateString();
+            const newFormattedTime = updatedInterview.time;
+
+            setImmediate(async () => {
+                try {
+                    // Applicant Email
+                    await sendEmail(
+                        existingInterview.applicantId.email,
+                        "Interview Rescheduled",
+                        `<p>Dear ${existingInterview.applicantId.firstName},</p>
+             <p>We would like to inform you that your interview originally scheduled for ${formattedDate} at ${formattedTime} has been rescheduled to ${newFormattedDate} at ${newFormattedTime}.</p>
+             <p>Reason: ${notes}</p>
+             <p>Please check your updated schedule and confirm your availability at your earliest convenience.</p>
+             <p>We apologize for any inconvenience caused and appreciate your understanding.</p>
+             <p>Best regards,<br/>Recruitment Team</p>`
+                    );
+
+                    // Interviewer Email
+                    await sendEmail(
+                        existingInterview.interviewerId.email,
+                        "Interview Rescheduled",
+                        `<p>Dear ${existingInterview.interviewerId.name},</p>
+             <p>Please be informed that the interview with ${existingInterview.applicantId.firstName} ${existingInterview.applicantId.lastName} originally scheduled for ${formattedDate} at ${formattedTime} has been rescheduled to ${newFormattedDate} at ${newFormattedTime}.</p>
+             <p>Reason: ${notes}</p>
+             <p>Kindly review your schedule and adjust accordingly.</p>
+             <p>Thank you for your cooperation.</p>
+             <p>Best regards,<br/>Recruitment Team</p>`
+                    );
+                } catch (emailError) {
+                    console.error("Failed to send notification emails:", emailError);
+                }
+            });
+        }
+
+
+        if (updatedInterview.status === "completed") {
+            if (!existingInterview.applicantId?.email) {
+                return res.status(400).json({ message: "Missing applicant email" });
+            }
+
+            const formattedDate = existingInterview.date.toLocaleDateString();
+            const formattedTime = existingInterview.time;
+
+            setImmediate(async () => {
+                try {
+                    await sendEmail(
+                        existingInterview.applicantId.email,
+                        "Interview Completed",
+                        `<p>Dear ${existingInterview.applicantId.firstName},</p>
+                 <p>Thank you for attending your interview on ${formattedDate} at ${formattedTime}. We appreciate the time and effort you invested in the process.</p>
+                 <p>Our team will review your interview and be in touch with you regarding the next steps.</p>
+                 <p>We wish you all the best and thank you for your interest in joining our organization.</p>
+                 <p>Best regards,<br/>Recruitment Team</p>`
+                    );
+                } catch (emailError) {
+                    console.error("Failed to send completion email:", emailError);
+                }
+            });
+        }
 
 
         // 7. Format response similar to fetchInterview
@@ -241,14 +396,42 @@ const updateInterview = async (req, res) => {
             notes: updatedInterview.notes || ''
         };
 
+        // 8. Respond to client immediately
         res.status(200).json({
             message: "Interview updated successfully",
             data: formattedInterview
         });
 
+        // 9. Create notification in background (only if there were actual changes)
+        if (changes.length > 0) {
+            setImmediate(async () => {
+                try {
+                    await createInterviewUpdateNotification(existingInterview, updatedInterview, changes);
+                } catch (notificationError) {
+                    console.error(`❌ Failed to create notification for interview ${updatedInterview._id}:`, notificationError);
+                }
+            });
+        }
+
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        console.error('Interview update error:', error);
+
+        // Handle validation errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => ({
+                field: err.path,
+                message: err.message
+            }));
+            return res.status(400).json({
+                message: 'Validation failed',
+                details: validationErrors
+            });
+        }
+
+        res.status(500).json({
+            message: "Server error",
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+        });
     }
 };
 
@@ -258,6 +441,7 @@ const deleteInterview = async (req, res) => {
         const { id } = req.params;
         const { reason, notifyCandidate } = req.body;
         const { isValidObjectId } = require('mongoose');
+        console.log(reason)
 
         if (!isValidObjectId(id)) {
             return res.status(400).json({ message: "Invalid interview ID" });
@@ -270,6 +454,7 @@ const deleteInterview = async (req, res) => {
         if (!interview) {
             return res.status(404).json({ message: "Interview not found" });
         }
+
 
         // Update to cancelled
         const updatedInterview = await Interview.findByIdAndUpdate(
@@ -315,6 +500,7 @@ const deleteInterview = async (req, res) => {
             });
         }
 
+
         // Format the response
         const formattedInterview = {
             id: updatedInterview._id,
@@ -334,6 +520,8 @@ const deleteInterview = async (req, res) => {
             message: "Interview has been cancelled successfully",
             data: formattedInterview
         });
+
+
 
     } catch (error) {
         console.error("Delete interview error:", error);
@@ -358,8 +546,8 @@ const permanentDeleteInterview = async (req, res) => {
         }
 
         // Store candidate name for response message
-        const candidateName = interview.applicantId ? 
-            `${interview.applicantId.firstName} ${interview.applicantId.lastName}` : 
+        const candidateName = interview.applicantId ?
+            `${interview.applicantId.firstName} ${interview.applicantId.lastName}` :
             'Unknown Candidate';
 
         // Permanently delete the interview
@@ -369,15 +557,15 @@ const permanentDeleteInterview = async (req, res) => {
             message: "Interview has been permanently deleted",
             data: {
                 deletedInterviewId: id,
-                candidateName:   candidateName
+                candidateName: candidateName
             }
         });
 
     } catch (error) {
         console.error("Permanent delete interview error:", error);
-        res.status(500).json({ 
-            message: "Server error", 
-            error: error.message 
+        res.status(500).json({
+            message: "Server error",
+            error: error.message
         });
     }
 };

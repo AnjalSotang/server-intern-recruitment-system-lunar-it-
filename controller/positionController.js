@@ -65,7 +65,14 @@ const createPosition = async (req, res) => {
 const viewPosition = async (req, res) => {
 
     try {
-        const positions = await Position.find();
+        const role = req.user.role;
+        let positions;
+
+        if (role === "admin") {
+            positions = await Position.find();
+        } else {
+            positions = await Position.find({ status: "Active" })
+        }
 
         if (positions.length === 0) {
             return res.status(200).json({ data: positions, message: "No positions found" });
