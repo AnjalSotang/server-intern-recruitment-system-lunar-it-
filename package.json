@@ -4,7 +4,7 @@
   "description": "This is the server for Intern-Recrutier-System",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js",
+    "dev": "node --watch index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

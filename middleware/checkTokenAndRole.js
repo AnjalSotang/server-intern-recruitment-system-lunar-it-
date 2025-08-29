@@ -10,6 +10,7 @@ if (!JWT_SECRET_KEY) {
 const checkTokenAndRole = (allowedRoles = []) => {
     return function (req, res, next) {
         const token = req.headers["authorization"];
+        console.log(token)
 
         // Case: No token → assume public "user"
         if (!token) {
@@ -21,18 +22,13 @@ const checkTokenAndRole = (allowedRoles = []) => {
         }
 
         // Clean token
-        const tokenWithoutBearer = token.startsWith("Bearer ") ? token.slice(7) : token;
+        const tokenWithoutBearer = token.split("Bearer ").filter(Boolean)[0]
+        if (!tokenWithoutBearer) {
+            return res.status(401).json({ error: "No Bearer token provided." });
+        }
 
-        jwt.verify(tokenWithoutBearer, JWT_SECRET_KEY, (err, decoded) => {
-            if (err) {
-                return res.status(401).json({ error: "Failed to authenticate token." });
-            }
-
-            const currentTime = Math.floor(Date.now() / 1000);
-            if (decoded.exp && decoded.exp < currentTime) {
-                return res.status(401).json({ error: "Token has expired." });
-            }
-
+        try {
+            const decoded = jwt.verify(tokenWithoutBearer, JWT_SECRET_KEY)
             req.user = {
                 id: decoded.id || decoded.userId,
                 role: decoded.role,
@@ -46,7 +42,16 @@ const checkTokenAndRole = (allowedRoles = []) => {
             }
 
             next();
-        });
+        } catch (err) {
+            if (err.name == "JsonWebTokenError") {
+                return res.status(508).json({ error: "Failed to authenticate token.", err });
+            }
+            if (err.name == 'TokenExpiredError') return res.status(508).json({ error: "Session Expired." });
+
+
+            return res.status(401).json({ error: "Failed to authenticate token.", err });
+
+        }
     };
 };
 

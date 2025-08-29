@@ -1,12 +1,13 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+const { Schema, model } = require('mongoose');
+const { ArrayPositionType, PositionType } = require('../utils/constants');
+
 
 const positionSchema = new Schema({
     title: { type: String, required: true },
     department: String,
     location: String,
     type: { type: String, enum: ["Full-time", "Part-time", "Remote", "Hybrid"] },
-    status: { type: String, enum: ["active", "closed"], default: "active" },
+    status: { type: String, enum: ArrayPositionType, default: PositionType.active },
     description: String,
     requirements: [String],
     responsibilities: [String],
@@ -23,8 +24,8 @@ const positionSchema = new Schema({
     tags: [String],
     priority: { type: String, enum: ["low", "medium", "high"], default: "medium" },
     experienceLevel: { type: String }
-}, {timestamps: true})
+}, { timestamps: true })
 
 
-const Position = mongoose.model('Position', positionSchema);
-module.exports = Position;
+const Position = model('Position', positionSchema);
+module.exports = Position

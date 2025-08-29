@@ -523,6 +523,61 @@ const sendApplicationMessage = async (req, res) => {
     }
 };
 
+
+let cachePositionSummay;
+
+const getApplicationSummary = async (req, res) => {
+
+    const currentTime = new Date();
+    // const firstDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth(), 1);
+    // const lastDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth() + 1, 0, 23, 59, 59, 999);
+    const twelveMonthsAgo = new Date(currentTime.getFullYear(), currentTime.getMonth() - 11, 1);
+
+    // Check if cache exists and is not expired
+    if (
+        cachePositionSummay &&
+        cachePositionSummay.exp > currentTime
+    ) {
+        return res.status(200).json({ ...cachePositionSummay, form: "cache" });
+    }
+
+    try {
+        // uery fresh data
+
+        const totalApplicationLastTwelveMonths = await Application.countDocuments({
+            appliedDate: {
+                $gte: twelveMonthsAgo,
+                $lte: currentTime
+            }
+        });
+        const reviewCount = await Application.where({ status: "reviewing" }).countDocuments().exec();
+        const accpetedCount = await Application.where({ status: "accepted" }).countDocuments().exec();
+        const rejectedCount = await Application.where({ status: "rejected" }).countDocuments().exec();
+
+        
+        cachePositionSummay = {
+            data: {
+                totalApplication: totalApplicationLastTwelveMonths,
+                reviewCount: reviewCount,
+                accpetedCount: accpetedCount,
+                rejectedCount: rejectedCount
+            },
+            exp: new Date(Date.now() + 30 * 1000)
+            , cacheAt: currentTime
+        };
+
+        return res.status(201).json(cachePositionSummay);
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Error Fetching position SummRY",
+            error: error.message
+        });
+    }
+
+};
+
+
 module.exports = {
     postApplication,
     getApplications,
@@ -530,5 +585,8 @@ module.exports = {
     updateApplicationStatus,
     downloadResume, // Export this function
     deleteApplication,
-    sendApplicationMessage
+    sendApplicationMessage,
+    getApplicationSummary
 };
+
+

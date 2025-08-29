@@ -4,7 +4,8 @@ const { createPosition,
     deletePostion,
     viewPosition,
     viewPositionById,
-    updatePosition
+    updatePosition,
+    getPositionSummary
 } =
 require("../controller/positionController")
 const { checkTokenAndRole } = require('../middleware/checkTokenAndRole');
@@ -12,6 +13,8 @@ const { checkTokenAndRole } = require('../middleware/checkTokenAndRole');
 
 
 // Route to create a new position
+router.get("/positionSummary", getPositionSummary)
+
 router.post("/position", checkTokenAndRole(['admin']), createPosition)
 router.delete("/position/:id", checkTokenAndRole(['admin']), deletePostion)
 router.get("/position", checkTokenAndRole(['admin', 'user']), viewPosition)

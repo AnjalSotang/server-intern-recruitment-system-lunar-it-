@@ -1,4 +1,7 @@
+const { captureRejections } = require('nodemailer/lib/xoauth2');
+const Application = require('../model/applicationModal');
 const Position = require('../model/positionModal');
+const { PositionType } = require('../utils/constants');
 
 // Controller to handle position creation
 const createPosition = async (req, res) => {
@@ -160,6 +163,63 @@ const deletePostion = async (req, res) => {
     }
 }
 
+let cachePositionSummay;
+
+const getPositionSummary = async (req, res) => {
+
+    const currentTime = new Date();
+    const firstDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth() + 1, 0, 23, 59, 59, 999);
+    const twelveMonthsAgo = new Date(currentTime.getFullYear(), currentTime.getMonth() - 11, 1);
+
+    // Check if cache exists and is not expired
+    if (
+        cachePositionSummay &&
+        cachePositionSummay.exp > currentTime
+    ) {
+        return res.status(200).json({ ...cachePositionSummay, form: "cache" });
+    }
+
+    try {
+        // uery fresh data
+        const positionsCount = await Position.countDocuments();
+        const activePositionsCount = await Position.where({ status: PositionType.active }).countDocuments().exec();
+        const positionFilled = await Application.countDocuments({
+            appliedDate: {
+                $gte: firstDayOfMonth,
+                $lte: lastDayOfMonth
+            }
+        });
+        const totalApplicationLastTwelveMonths = await Application.countDocuments({
+            appliedDate: {
+                $gte: twelveMonthsAgo,
+                $lte: currentTime
+            }
+        });
+
+
+        cachePositionSummay = {
+            data: {
+                position: positionsCount,
+                closed: activePositionsCount,
+                positionFilled: positionFilled,
+                totalApplication: totalApplicationLastTwelveMonths
+            },
+            exp: new Date(Date.now() + 30 * 1000)
+            , cacheAt: currentTime
+        };
+
+        return res.status(201).json(cachePositionSummay);
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Error Fetching position SummRY",
+            error: error.message
+        });
+    }
+
+};
+
 
 
 module.exports = {
@@ -167,5 +227,6 @@ module.exports = {
     deletePostion,
     viewPosition,
     viewPositionById,
-    updatePosition
+    updatePosition,
+    getPositionSummary
 }
