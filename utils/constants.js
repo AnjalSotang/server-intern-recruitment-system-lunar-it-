@@ -3,4 +3,5 @@ export const PositionType = {
     closed: "closed"
 } 
 
+
 export const ArrayPositionType = Object.values(PositionType)

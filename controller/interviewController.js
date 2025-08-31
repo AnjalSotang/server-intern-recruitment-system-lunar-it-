@@ -570,4 +570,99 @@ const permanentDeleteInterview = async (req, res) => {
     }
 };
 
-module.exports = { scheduleInterview, fetchInterview, updateInterview, deleteInterview, permanentDeleteInterview };
+let cachePositionSummay;
+
+const getInterviewSummary = async (req, res) => {
+    const cache = req.query.cache
+
+    const currentTime = new Date();
+    
+    // 5 months ago
+    const fiveMonthsAgo = new Date(currentTime.getFullYear(), currentTime.getMonth() - 4, 1);
+    // -4 because we want the start of the month 4 months before current month (inclusive)
+
+    // This week Get start of the week (assuming week starts on Monday)
+    const firstDayOfWeek = new Date(currentTime);
+    const day = currentTime.getDay(); // 0 = Sunday, 1 = Monday, ...
+    const diff = day === 0 ? -6 : 1 - day; // if Sunday, go back 6 days, else back to Monday
+    firstDayOfWeek.setDate(currentTime.getDate() + diff);
+    firstDayOfWeek.setHours(0, 0, 0, 0); // start of the day
+
+    // Get end of the week (today)
+    const lastDayOfWeek = new Date(currentTime);
+    lastDayOfWeek.setHours(23, 59, 59, 999);
+
+
+    const firstDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth(), 1);
+    firstDayOfMonth.setHours(0, 0, 0, 0);
+
+    // End of the month
+    const lastDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth() + 1, 0);
+    lastDayOfMonth.setHours(23, 59, 59, 999);
+
+
+    if(cache == true || cache == "true"){
+            // Check if cache exists and is not expired
+    if (
+        cachePositionSummay && cachePositionSummay.exp > currentTime
+    ) {
+        return res.status(200).json({ ...cachePositionSummay, form: "cache" });
+    }
+    }
+
+
+    try {
+
+        // Count interviews from last 5 months
+        const totalInterviewLastFiveMonths = await Interview.countDocuments({
+            date: {
+                $gte: fiveMonthsAgo, // from 5 months ago (start of that month)
+                $lte: currentTime    // until today
+            }
+        });
+        
+        const scheduleToday = await Interview.where({ date: currentTime }).countDocuments().exec();
+        // Count completed interviews this week
+
+        const completedCount = await Interview.countDocuments({
+            status: "completed",
+            // date: {
+            //     $gte: firstDayOfWeek,
+            //     $lte: lastDayOfWeek
+            // }
+        });
+
+        // Count no-show interviews for this month
+        const nowshowCount = await Interview.countDocuments({
+            status: "no_show",
+            // date: {
+            //     $gte: firstDayOfMonth,
+            //     $lte: lastDayOfMonth
+            // }
+        });
+
+
+        cachePositionSummay = {
+            data: {
+                totalInterview: totalInterviewLastFiveMonths,
+                scheduleToday: scheduleToday,
+                completedCount: completedCount,
+                nowshowCount: nowshowCount
+            },
+            exp: new Date(Date.now() + 30 * 1000)
+            , cacheAt: currentTime
+        };
+
+        return res.status(201).json(cachePositionSummay);
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Error Fetching position SummRY",
+            error: error.message
+        });
+    }
+
+};
+
+
+module.exports = { scheduleInterview, fetchInterview, updateInterview, deleteInterview, permanentDeleteInterview, getInterviewSummary };

@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { scheduleInterview, fetchInterview, updateInterview, deleteInterview, permanentDeleteInterview } = require('../controller/interviewController');
+const { scheduleInterview, fetchInterview, updateInterview, deleteInterview, permanentDeleteInterview, getInterviewSummary } = require('../controller/interviewController');
 
 // Create
 router.post('/interview', scheduleInterview);
 
 // // Read all
 router.get('/interview', fetchInterview);
+router.get('/interview-summary', getInterviewSummary);
 
 // // Read one
 // router.get('/member/:id', getMemberById);

@@ -183,7 +183,7 @@ const getPositionSummary = async (req, res) => {
     try {
         // uery fresh data
         const positionsCount = await Position.countDocuments();
-        const activePositionsCount = await Position.where({ status: PositionType.active }).countDocuments().exec();
+        const activePositionsCount = await Position.where({ status: PositionType.active }).countDocuments();
         const positionFilled = await Application.countDocuments({
             appliedDate: {
                 $gte: firstDayOfMonth,

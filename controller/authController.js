@@ -47,7 +47,7 @@ const login = async (req, res) => {
         const token = jwt.sign(
             { id: existingUser._id, role: existingUser.role },
             process.env.JWT_SECRET || "default-secret",
-            { expiresIn: 5000 }
+            { expiresIn: '7d' }
         );
 
         // Remove password safely
@@ -101,7 +101,7 @@ const verify2FALogin = async (req, res) => {
         const jwtToken = jwt.sign(
             { id: user._id, role: user.role },
             process.env.JWT_SECRET || "default-secret",
-            { expiresIn: "5s" }
+            { expiresIn: "7d" }
         );
 
         // Remove password safely

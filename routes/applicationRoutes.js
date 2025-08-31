@@ -16,7 +16,7 @@ const { checkTokenAndRole } = require('../middleware/checkTokenAndRole');
 
 router.post("/application/:id", upload.single('resume'), postApplication);
 
-router.get("/application", checkTokenAndRole(['admin']), getApplications);
+router.get("/application", getApplications);
 router.get("/application/:id", getApplication);
 router.get("/applicationSummary", getApplicationSummary);
 router.put("/application/:id/status", updateApplicationStatus);

@@ -527,22 +527,21 @@ const sendApplicationMessage = async (req, res) => {
 let cachePositionSummay;
 
 const getApplicationSummary = async (req, res) => {
-
+    const cache = req.query.cache
     const currentTime = new Date();
-    // const firstDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth(), 1);
-    // const lastDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth() + 1, 0, 23, 59, 59, 999);
     const twelveMonthsAgo = new Date(currentTime.getFullYear(), currentTime.getMonth() - 11, 1);
+    if(cache == true|| cache == "true"){
 
     // Check if cache exists and is not expired
     if (
-        cachePositionSummay &&
-        cachePositionSummay.exp > currentTime
+        cachePositionSummay && cachePositionSummay.exp > currentTime
     ) {
         return res.status(200).json({ ...cachePositionSummay, form: "cache" });
     }
+    }
+
 
     try {
-        // uery fresh data
 
         const totalApplicationLastTwelveMonths = await Application.countDocuments({
             appliedDate: {
@@ -550,16 +549,15 @@ const getApplicationSummary = async (req, res) => {
                 $lte: currentTime
             }
         });
-        const reviewCount = await Application.where({ status: "reviewing" }).countDocuments().exec();
-        const accpetedCount = await Application.where({ status: "accepted" }).countDocuments().exec();
+        const reviewCount = await Application.countDocuments({ status: "reviewing" }); const accpetedCount = await Application.where({ status: "accepted" }).countDocuments().exec();
         const rejectedCount = await Application.where({ status: "rejected" }).countDocuments().exec();
 
-        
+
         cachePositionSummay = {
             data: {
                 totalApplication: totalApplicationLastTwelveMonths,
                 reviewCount: reviewCount,
-                accpetedCount: accpetedCount,
+                acceptedCount: accpetedCount,
                 rejectedCount: rejectedCount
             },
             exp: new Date(Date.now() + 30 * 1000)
