@@ -549,7 +549,8 @@ const getApplicationSummary = async (req, res) => {
                 $lte: currentTime
             }
         });
-        const reviewCount = await Application.countDocuments({ status: "reviewing" }); const accpetedCount = await Application.where({ status: "accepted" }).countDocuments().exec();
+        const reviewCount = await Application.countDocuments({ status: "reviewing" }); 
+        const accpetedCount = await Application.where({ status: "accepted" }).countDocuments().exec();
         const rejectedCount = await Application.where({ status: "rejected" }).countDocuments().exec();
 
 

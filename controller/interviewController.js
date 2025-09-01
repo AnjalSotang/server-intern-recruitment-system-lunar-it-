@@ -626,19 +626,19 @@ const getInterviewSummary = async (req, res) => {
 
         const completedCount = await Interview.countDocuments({
             status: "completed",
-            // date: {
-            //     $gte: firstDayOfWeek,
-            //     $lte: lastDayOfWeek
-            // }
+            date: {
+                $gte: firstDayOfWeek,
+                $lte: lastDayOfWeek
+            }
         });
 
         // Count no-show interviews for this month
         const nowshowCount = await Interview.countDocuments({
             status: "no_show",
-            // date: {
-            //     $gte: firstDayOfMonth,
-            //     $lte: lastDayOfMonth
-            // }
+            date: {
+                $gte: firstDayOfMonth,
+                $lte: lastDayOfMonth
+            }
         });
 
 

@@ -166,6 +166,7 @@ const deletePostion = async (req, res) => {
 let cachePositionSummay;
 
 const getPositionSummary = async (req, res) => {
+    const cache = req.query.cache;
 
     const currentTime = new Date();
     const firstDayOfMonth = new Date(currentTime.getFullYear(), currentTime.getMonth(), 1);
@@ -173,12 +174,14 @@ const getPositionSummary = async (req, res) => {
     const twelveMonthsAgo = new Date(currentTime.getFullYear(), currentTime.getMonth() - 11, 1);
 
     // Check if cache exists and is not expired
-    if (
+    if(cache && cache === 'false') {
+   if (
         cachePositionSummay &&
         cachePositionSummay.exp > currentTime
     ) {
         return res.status(200).json({ ...cachePositionSummay, form: "cache" });
-    }
+    }    }
+ 
 
     try {
         // uery fresh data
