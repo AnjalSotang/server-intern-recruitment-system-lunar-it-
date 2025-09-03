@@ -1,26 +1,38 @@
 require('dotenv').config()
 const express = require("express")
-//Database Connection
 const cors = require('cors'); // Import the cors package
+//Database Connection
 const connectDB = require("./database/index")
 const { connect } = require('mongoose')
 const app = express()
 const bcrypt = require('bcrypt')
 const path = require("path");
 
-// Define the CORS options
+// Define the CORS options FIRST
 const corsOptions = {
     credentials: true,
-    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://intern-recruitment-system-lunar-it.onrender.com'] // Whitelist the domains you want to allow
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://intern-recruitment-system-lunar-it.onrender.com'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    optionsSuccessStatus: 200
 };
 
-app.use(cors(corsOptions)); // Use the cors middleware with your options
+// Apply CORS middleware EARLY
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
-//parshing the json so that express understand the code
+// Then other middlewares
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 
-
+// Add a test endpoint to verify CORS is working
+app.get('/cors-test', (req, res) => {
+    res.json({ 
+        message: 'CORS test successful!',
+        origin: req.headers.origin,
+        timestamp: new Date()
+    });
+});
 
 connectDB()
 
@@ -60,7 +72,8 @@ const createUser = async () => {
 
 createUser();
 
-app.listen(process.env.PORT, () => {
-    console.log("Server is running on port 3000"
-    )
-})
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
