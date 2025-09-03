@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 // Define the CORS options
 const corsOptions = {
     credentials: true,
-    origin: ['http://localhost:3000', 'http://localhost:5173'] // Whitelist the domains you want to allow
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://intern-recruitment-system-lunar-it.onrender.com'] // Whitelist the domains you want to allow
 };
 
 app.use(cors(corsOptions)); // Use the cors middleware with your options
