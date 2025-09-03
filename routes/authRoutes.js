@@ -71,6 +71,7 @@ router.put(
 
 router.delete(
     "/admin/:role", 
+    checkTokenAndRole(['admin']),
     deleteAdmin
 );
 
