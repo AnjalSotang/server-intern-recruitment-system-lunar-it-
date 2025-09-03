@@ -8,11 +8,6 @@ const app = express()
 const bcrypt = require('bcrypt')
 const path = require("path");
 
-//parshing the json so that express understand the code
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }));
-
-
 // Define the CORS options
 const corsOptions = {
     credentials: true,
@@ -20,6 +15,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions)); // Use the cors middleware with your options
+
+//parshing the json so that express understand the code
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
+
 
 
 connectDB()
