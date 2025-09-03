@@ -36,115 +36,43 @@ app.get('/cors-test', (req, res) => {
 
 connectDB()
 
-// Load and test routes ONE BY ONE to find the problematic route
-console.log('🚀 Starting server with route debugging...');
-
-try {
-    console.log('📥 Loading authRoutes...');
-    const authRoutes = require("./routes/authRoutes");
-    app.use("/auth", authRoutes);
-    console.log('✅ authRoutes loaded successfully');
-} catch (error) {
-    console.error('❌ ERROR in authRoutes:', error.message);
-    process.exit(1);
-}
-
-try {
-    console.log('📥 Loading positionRoutes...');
-    const positionRoutes = require("./routes/positionRoute");
-    app.use("/api", positionRoutes);
-    console.log('✅ positionRoutes loaded successfully');
-} catch (error) {
-    console.error('❌ ERROR in positionRoutes:', error.message);
-    process.exit(1);
-}
-
-try {
-    console.log('📥 Loading applicationRoutes...');
-    const applicatonRoutes = require("./routes/applicationRoutes");
-    app.use("/api", applicatonRoutes);
-    console.log('✅ applicationRoutes loaded successfully');
-} catch (error) {
-    console.error('❌ ERROR in applicationRoutes:', error.message);
-    process.exit(1);
-}
-
-try {
-    console.log('📥 Loading memberRoutes...');
-    const memberRoutes = require("./routes/memberRoutes");
-    app.use("/api", memberRoutes);
-    console.log('✅ memberRoutes loaded successfully');
-} catch (error) {
-    console.error('❌ ERROR in memberRoutes:', error.message);
-    process.exit(1);
-}
-
-try {
-    console.log('📥 Loading interviewRoutes...');
-    const interviewRoutes = require("./routes/interviewRoutes");
-    app.use("/api", interviewRoutes);
-    console.log('✅ interviewRoutes loaded successfully');
-} catch (error) {
-    console.error('❌ ERROR in interviewRoutes:', error.message);
-    process.exit(1);
-}
-
-try {
-    console.log('📥 Loading notificationRoutes...');
-    const notificationRoutes = require("./routes/notificationRoutes");
-    app.use("/api", notificationRoutes);
-    console.log('✅ notificationRoutes loaded successfully');
-} catch (error) {
-    console.error('❌ ERROR in notificationRoutes:', error.message);
-    process.exit(1);
-}
-
-try {
-    console.log('📥 Loading dashboardSummaryRoutes...');
-    const dashboardSummaryRoutes = require("./routes/dashboardSummaryRoutes");
-    app.use("/api", dashboardSummaryRoutes);
-    console.log('✅ dashboardSummaryRoutes loaded successfully');
-} catch (error) {
-    console.error('❌ ERROR in dashboardSummaryRoutes:', error.message);
-    process.exit(1);
-}
-
-try {
-    console.log('📥 Loading messagesRoutes...');
-    const messagesRoutes = require("./routes/messagesRoutes");
-    app.use("/api", messagesRoutes);
-    console.log('✅ messagesRoutes loaded successfully');
-} catch (error) {
-    console.error('❌ ERROR in messagesRoutes:', error.message);
-    process.exit(1);
-}
-
-console.log('🎉 All routes loaded successfully!');
+const positionRoutes = require("./routes/positionRoute")
+const applicatonRoutes = require("./routes/applicationRoutes")
+const authRoutes = require("./routes/authRoutes")
+const memberRoutes = require("./routes/memberRoutes")
+const interviewRoutes = require("./routes/interviewRoutes")
+const notificationRoutes = require("./routes/notificationRoutes")
+const dashboardSummaryRoutes = require("./routes/dashboardSummaryRoutes")
+const messagesRoutes = require("./routes/messagesRoutes")
  
 const User = require("./model/userModal")
 
-// Static file serving
+app.use("/api", positionRoutes)
+app.use("/api", applicatonRoutes);
+app.use("/api", memberRoutes);
+app.use("/api", interviewRoutes);
+app.use("/api", notificationRoutes);
+app.use("/api", dashboardSummaryRoutes);
+app.use("/api", messagesRoutes);
+app.use("/auth", authRoutes)
 app.use('/api/images', express.static(path.join(__dirname, 'storage/images')));
+// Serve resumes from the storage/resumes directory  
 app.use('/api/resumes', express.static(path.join(__dirname, 'storage/resumes')));
 
 const createUser = async () => {
-    try {
-        let foundAdmin = await User.findOne({ role: "admin" });
+    let foundAdmin = await User.findOne({ role: "admin" });
 
-        if (!foundAdmin) {
-            const hashpassword = await bcrypt.hash("password", 8);
-            await User.create({
-                name: "Admin Bahadur",
-                email: "raianjal555@gmail.com",
-                password: hashpassword,
-                role: "admin"
-            });
-            console.log("✅ Admin user created successfully");
-        } else {
-            console.log("✅ Admin user already exists");
-        }
-    } catch (error) {
-        console.error('❌ Error creating admin user:', error.message);
+    if (!foundAdmin) {
+        const hashpassword = await bcrypt.hash("password", 8);
+        await User.create({
+            name: "Admin Bahadur",
+            email: "raianjal555@gmail.com",
+            password: hashpassword,
+            role: "admin"
+        });
+        console.log("Admin user created successfully");
+    } else {
+        console.log("Admin user already exists");
     }
 };
 
@@ -153,6 +81,5 @@ createUser();
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running successfully on port ${PORT}`);
-    console.log(`📡 Test CORS at: https://server-intern-recruitment-system-lunar-it.onrender.com/cors-test`);
+    console.log(`Server is running on port ${PORT}`);
 });
