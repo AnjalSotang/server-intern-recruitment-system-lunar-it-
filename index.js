@@ -12,7 +12,7 @@ const path = require("path");
 const corsOptions = {
     credentials: true,
     origin: ['http://localhost:3000', 'http://localhost:5173', 'https://intern-recruitment-system-lunar-it.onrender.com'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     optionsSuccessStatus: 200
 };

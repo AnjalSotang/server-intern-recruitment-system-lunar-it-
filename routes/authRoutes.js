@@ -69,11 +69,11 @@ router.put(
     updateUser
 );
 
-router.delete(
-    "/admin/:role", 
-    checkTokenAndRole(['admin']),
-    deleteAdmin
-);
+// router.delete(
+//     "/admin/:id", 
+//     checkTokenAndRole(['admin']),
+//     deleteAdmin
+// );
 
 router.get(
     "/admin", 

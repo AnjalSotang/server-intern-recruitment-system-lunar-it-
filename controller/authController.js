@@ -276,28 +276,28 @@ const get2FAStatus = async (req, res) => {
 
 // ... (keep all your existing functions: deleteAdmin, updateUser, viewUser, forgotPassword, resetPassword, changePassword)
 
-const deleteAdmin = async (req, res) => {
-    try {
-        const { role } = req.params;
+// const deleteAdmin = async (req, res) => {
+//     try {
+//         const { role } = req.params;
 
-        // Use findOneAndDelete to get the deleted document
-        const deletedAdmin = await User.findOneAndDelete({ role });
+//         // Use findOneAndDelete to get the deleted document
+//         const deletedAdmin = await User.findOneAndDelete({ role });
 
-        if (!deletedAdmin) {
-            return res.status(404).json({ message: "Admin not found" });
-        }
+//         if (!deletedAdmin) {
+//             return res.status(404).json({ message: "Admin not found" });
+//         }
 
-        res.status(200).json({
-            message: "Admin deleted successfully",
-            data: deletedAdmin
-        });
-    } catch (error) {
-        console.error("Error during deletion:", error.message);
-        res.status(500).json({
-            message: "An error occurred during deletion. Please try again later.",
-        });
-    }
-};
+//         res.status(200).json({
+//             message: "Admin deleted successfully",
+//             data: deletedAdmin
+//         });
+//     } catch (error) {
+//         console.error("Error during deletion:", error.message);
+//         res.status(500).json({
+//             message: "An error occurred during deletion. Please try again later.",
+//         });
+//     }
+// };
 
 // Update User Controller
 const updateUser = async (req, res) => {
