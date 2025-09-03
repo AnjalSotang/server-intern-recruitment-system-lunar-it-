@@ -4,7 +4,7 @@ const { ArrayPositionType, PositionType } = require('../utils/constants');
 
 const positionSchema = new Schema({
     title: { type: String, required: true },
-    department: String,
+    department: String, enum: ['frontend', 'backend', 'fullstack', 'data', 'design', 'product', 'devops'],
     location: String,
     type: { type: String, enum: ["Full-time", "Part-time", "Remote", "Hybrid"] },
     status: { type: String, enum: ArrayPositionType, default: PositionType.active },

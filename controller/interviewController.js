@@ -70,8 +70,15 @@ const scheduleInterview = async (req, res) => {
         }
 
         // 2. Find applicant
-        const applicant = await Applicantion.findById(applicantId);
-        if (!applicant) {
+const applicant = await Applicantion.findOneAndUpdate(
+  { _id: applicantId },              // filter
+  { status: "interview-scheduled" }, // update
+  { new: true }                      // return updated document
+);
+
+if (!applicant) {
+  return res.status(404).json({ message: "Applicant not found" });
+}        if (!applicant) {
             return res.status(404).json({ message: "Applicant not found" });
         }
 

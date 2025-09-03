@@ -203,6 +203,35 @@ const emailBody = `
   }
 };
 
+const messageSummary = async(req, res) => {
+    const internshipCount = await Message.countDocuments({
+        status: "internship"
+    });
+       const partnershipCount = await Message.countDocuments({
+        status: "partnership"
+    });
+         const servicesCount = await Message.countDocuments({
+        status: "services"
+    });
+           const careersCount = await Message.countDocuments({
+        status: "careers"
+    });
+              const generalCount = await Message.countDocuments({
+        status: "general"
+    });
+
+    res.status(200).json({
+        data: {
+            internshipCount: internshipCount,
+            partnershipCount: partnershipCount,
+            servicesCount: servicesCount,
+            careersCount: careersCount,
+            generalCount: generalCount
+        }
+    })
+
+}
+
 
 
 module.exports = {
@@ -210,5 +239,6 @@ module.exports = {
     viewMessage,
     updateMessageStatus,
     deleteMessage,
-    sendReplyMessage
+    sendReplyMessage,
+    messageSummary
 };

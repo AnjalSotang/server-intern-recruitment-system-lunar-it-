@@ -6,8 +6,10 @@ const {
     getMemberById,
     updateMember,
     deleteMember,
-    getAdmin
+    getAdmin,
+    
 } = require('../controller/memberController');
+const {  } = require('../controller/messagesController');
 
 // Create
 router.post('/member', addMember);
@@ -18,6 +20,7 @@ router.get('/member/admin', getAdmin);
 
 // Read one
 router.get('/member/:id', getMemberById);
+
 
 // Update
 router.put('/member/:id', updateMember);
