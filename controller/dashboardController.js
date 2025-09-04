@@ -232,10 +232,62 @@ const departmentSummary = async (req, res) =>{
 }
 
 
+let cacheDepartmentCart;
+
+const getDepartmentChart = async (req, res) => {
+    const cache = req.query.cache
+    const currentTime = new Date();
+
+    if(cache == true|| cache == "true"){
+
+    // Check if cache exists and is not expired
+    if (
+        cacheDepartmentCart && cacheDepartmentCart.exp > currentTime
+    ) {
+        return res.status(200).json({ ...cacheDepartmentCart, form: "cache" });
+    }
+    }
+
+
+    try {
+
+        const frontendCount = await Application.countDocuments({ department: "frontnend" }); 
+        const backendCount = await Application.countDocuments({ department: "backend" }); 
+        const fullstackCount = await Application.countDocuments({ department: "fullstack" }); 
+        const dataCount = await Application.countDocuments({ department: "data" }); 
+        const designCount = await Application.countDocuments({ department: "design" }); 
+        const productCount = await Application.countDocuments({ department: "product" }); 
+        const devopsCount = await Application.countDocuments({ department: "devops" }); 
+        
+
+        cacheDepartmentCart= {
+            data: {
+                frontendCount: frontendCount,
+                backendCount: backendCount,
+                fullstackCount: fullstackCount,
+                dataCount: dataCount,
+                designCount: designCount,
+                productCount: productCount,
+                devopsCount: devopsCount
+            },
+            exp: new Date(Date.now() + 30 * 1000)
+            , cacheAt: currentTime
+        };
+
+        return res.status(201).json(cacheDepartmentCart);
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Error Fetching position SummRY",
+            error: error.message
+        });
+    }
+};
 
 
 module.exports = {
     getDashboardSummary,
     applicationStatusCount,
-    departmentSummary 
+    departmentSummary,
+    getDepartmentChart
 }

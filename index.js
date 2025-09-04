@@ -11,7 +11,7 @@ const path = require("path");
 // Define the CORS options FIRST
 const corsOptions = {
     credentials: true,
-    origin: ['http://localhost:3000', 'https://intern-recruitment-system-lunar-it.vercel.app'],
+    origin: ['http://localhost:3000', 'https://intern-recruitment-system-lunar-r9x7gtosv.vercel.app'],
 };
 
 // Apply CORS middleware EARLY

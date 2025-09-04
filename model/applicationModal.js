@@ -102,10 +102,7 @@ const applicationSchema = new Schema({
         type: String,
         trim: true
     },
-    department: {
-        type: String,
-        trim: true
-    },
+    department: String, enum: ['frontend', 'backend', 'fullstack', 'data', 'design', 'product', 'devops'],
     status: {
         type: String,
         enum: ["pending", "reviewing", "interview-scheduled", "accepted", "rejected"],
