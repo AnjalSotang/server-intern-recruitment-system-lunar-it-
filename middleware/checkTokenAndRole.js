@@ -10,7 +10,7 @@ if (!JWT_SECRET_KEY) {
 const checkTokenAndRole = (allowedRoles = []) => {
     return function (req, res, next) {
         const token = req.headers["authorization"];
-        console.log(token)
+        // console.log(token)
 
         // Case: No token → assume public "user"
         if (!token) {

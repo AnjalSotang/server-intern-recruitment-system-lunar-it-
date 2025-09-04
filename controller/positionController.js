@@ -74,7 +74,7 @@ const viewPosition = async (req, res) => {
         if (role === "admin") {
             positions = await Position.find();
         } else {
-            positions = await Position.find({ status: "Active" })
+            positions = await Position.find({ status: "active" })
         }
 
         if (positions.length === 0) {
