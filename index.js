@@ -11,12 +11,11 @@ const path = require("path");
 // Define the CORS options FIRST
 const corsOptions = {
     credentials: true,
-    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://intern-recruitment-system-lunar-it.onrender.com']
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://intern-recruitment-system-lunar-it.onrender.com'],
 };
 
 // Apply CORS middleware EARLY
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle preflight requests
 
 // Then other middlewares
 app.use(express.json())

@@ -682,7 +682,6 @@ module.exports = {
     updateUser,
     viewUser,
     login,
-    deleteAdmin,
     changePassword,
     forgotPassword,
     resetPassword,
